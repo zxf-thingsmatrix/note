@@ -189,6 +189,8 @@ public void testCreateFtpServer() {
 }
 ```
 
+
+
 > 启动 ftp server
 
 ```java
@@ -200,6 +202,8 @@ public void testStartServer() {
     System.out.println(resp); //{   "ServerId": "s-7317991c322a440db"}
 }
 ```
+
+
 
 > 停止 ftp server
 
@@ -242,10 +246,28 @@ public static void init() {
             public String secretAccessKey() {
                 return secretKeyId;
             }
-        }).build();
+        })
+      	// 使用 bucket 传输加速功能
+        .serviceConfiguration(builder -> builder.accelerateModeEnabled(true))
+        // 超时配置
+		.overrideConfiguration(builder -> {                  builder.apiCallTimeout(s3.getTimeout()).apiCallAttemptTimeout(s3.getTimeout());
+                })
+        build();
 
 }
 ```
+
+
+
+> 对指定 bucket 开启传输加速
+
+```java
+PutBucketAccelerateConfigurationResponse resp2 = cli.putBucketAccelerateConfiguration(builder -> {
+                builder.bucket("bucket 名称").accelerateConfiguration(builder1 -> builder1.status(BucketAccelerateStatus.ENABLED));
+            });
+```
+
+
 
 > 定义模型
 
@@ -270,6 +292,8 @@ static class S3File {
 }
 ```
 
+
+
 > 列出所有 bucket
 
 ```java
@@ -280,17 +304,21 @@ public void testListBuckets() {
 }
 ```
 
+
+
 > 添加一个 bucket
 
 ```java
 @Test
 public void testAddBucket() {
-    CreateBucketResponse resp = cli.createBucket(builder -> builder.bucket("ftp-test-java"));
+    CreateBucketResponse resp = cli.createBucket(builder -> builder.bucket("bucket 名称"));
 
     System.out.println(resp);
     //        CreateBucketResponse(Location=http://ftp-test-java.s3.amazonaws.com/)
 }
 ```
+
+
 
 > 往 bucket 添加一个 文件
 
@@ -298,19 +326,17 @@ public void testAddBucket() {
 @Test
 public void testPutObject() {
     S3File f = new S3File()
-        .setBucket("ftp-test-s3333")
-        .setDir("test-dir")
-        .setName("30MB.zip")
-        .setUploadPath("C:\\Users\\admin\\Desktop\\work\\k8s部署说明.pdf");
-
+        .setBucket("bucket 名称")
+        .setDir("s3 上文件目录")
+        .setName("s3 上文件名")
+        .setUploadPath("本地文件路径");
 
     long start = System.currentTimeMillis();
 
     File file = new File(f.getUploadPath());
-    try (FileInputStream in = new FileInputStream(file);
-         BufferedInputStream bis = new BufferedInputStream(in, 64 * 1024)) {
+    try (FileInputStream in = new FileInputStream(file)) {
 
-        PutObjectResponse resp = cli.putObject(builder -> builder.bucket(f.getBucket()).key(f.getKey()), RequestBody.fromInputStream(bis, file.length()));
+        PutObjectResponse resp = cli.putObject(builder -> builder.bucket(f.getBucket()).key(f.getKey()), RequestBody.fromInputStream(in, file.length()));
 
         System.out.println("time: " + (System.currentTimeMillis() - start) / 1000);
         System.out.println(resp);
@@ -324,6 +350,146 @@ public void testPutObject() {
 
 
 
+> 从 bucket 下载一个文件
+
+```java
+@Test
+public void testGetObject() {
+    S3File f = new S3File()
+        .setBucket("bucket 名称")
+        .setDir("s3 上文件目录")
+        .setName("s3 上文件名")
+        .setDownloadPath("下载后的本地保存位置");
+    try (FileOutputStream out = new FileOutputStream(f.getDownloadPath())) {
+        GetObjectResponse resp = cli.getObject(
+            builder -> builder.bucket(f.getBucket()).key(f.getKey()), ResponseTransformer.toOutputStream(out));
+
+        System.out.println(resp);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+}
+```
+
+
+
 ## SecretsManager
 
 > 提供 ftp 用户管理和存储功能
+
+### 代码操作
+
+> 初始化 cli
+
+```java
+private static SecretsManagerClient cli;
+private static final String accessKeyId = ""; //需要向运维申请
+private static final String secretKeyId = ""; //需要向运维申请
+
+private static ObjectMapper om;
+
+@BeforeClass
+public static void init() {
+    om = new ObjectMapper();
+    cli = SecretsManagerClient.builder()
+        .credentialsProvider(() -> new AwsCredentials() {
+            @Override
+            public String accessKeyId() {
+                return accessKeyId;
+            }
+
+            @Override
+            public String secretAccessKey() {
+                return secretKeyId;
+            }
+        })
+        .region(Region.AP_SOUTHEAST_1)
+        .build();
+}
+```
+
+
+
+> 定义模型
+
+```java
+@ToString
+@Data
+@Accessors(chain = true)
+static class FtpUserInfo {
+
+    @JsonIgnore
+    private String username;
+
+    @JsonProperty("Password")
+    private String password;
+
+    @JsonProperty("Role")
+    private String role; //允许访问 s3 对应 bucket 的一个角色
+
+    @JsonProperty("HomeDirectoryDetails")
+    private String homeDirectoryDetails; //DirMapping json
+
+}
+
+@ToString
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+static class DirMapping {
+
+    @JsonProperty("Entry")
+    private String entry; //ftp 目录
+
+    @JsonProperty("Target")
+    private String target; //s3 目录
+
+}
+```
+
+
+
+> 添加一个 secret (即 ftp 的一个用户)
+
+```java
+@Test
+public void testAddSecret() throws JsonProcessingException {
+
+    //允许访问 s3 对应 bucket 的一个角色
+    String role = ""; //向运维申请
+
+    // ftp 用户 homedir 与 s3 路径的映射
+    ArrayList<DirMapping> dirMapping = new ArrayList<>(1);
+    dirMapping.add(new DirMapping("/", "/ftp-test-s3333/test-dir"));
+
+    FtpUserInfo user = new FtpUserInfo()
+        .setUsername("test-java")
+        .setPassword("123456")
+        .setRole(role)
+        .setHomeDirectoryDetails(om.writeValueAsString(dirMapping));
+    String secretJson = om.writeValueAsString(user);
+
+    CreateSecretResponse resp = cli.createSecret(builder ->builder.name("SFTP/" + user.getUsername()).secretString(secretJson));
+
+    System.out.println(resp);
+    //        CreateSecretResponse(ARN=arn:aws:secretsmanager:ap-southeast-1:066742168474:secret:SFTP/test-java-oEE2I9, Name=SFTP/test-java, VersionId=e391e945-7e0f-4f8d-9626-3ea50fea1914)
+}
+```
+
+
+
+> 删除一个 secret (即 ftp 一个用户)
+
+```java
+@Test
+public void testDeleteSecret() {
+    String username = "test-java";
+    DeleteSecretResponse resp = Optional.ofNullable(cli.deleteSecret((builder -> builder.secretId("SFTP/" + username).forceDeleteWithoutRecovery(true))))
+        .orElseThrow(() -> new RuntimeException("delete secret error, result is null."));
+
+    System.out.println(resp);
+    //        DeleteSecretResponse(ARN=arn:aws:secretsmanager:ap-southeast-1:066742168474:secret:test-name-PwW7Qs, Name=test-name, DeletionDate=2020-05-14T05:18:47.634Z)
+}
+```
+

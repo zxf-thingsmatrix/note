@@ -1,0 +1,143 @@
+:toc:
+:source-highlighter: highlightjs
+
+= work
+
+____
+两个线程同时对一个文件进行写入
+____
+
+====
+不会抛异常，而是同时写入各自的内容
+====
+
+____
+两个进程同时对一个文件进行写入
+____
+
+====
+不会抛异常，而是同时写入各自的内容；但是可以使用 FileLock 
+====
+
+____
+slf4j log.error("foo={},bar={}",foo,bar,e) 
+____
+
+====
+这样写是可以打印异常堆栈的
+====
+
+____
+tomcat 文件上传超过限制
+____
+
+====
+文件上传时文件超过限制，`server.tomcat.max-swallow-size` 时，tomcat 会自动把连接断开，但是请求仍然会传到 springboot, 当 springboot 响应时就会报 	`TypeError: NetworkError when attempting to fetch resource`  , 这个配置会被 `spring.servlet.multipart.max-file-size` 覆盖；
+
+解决方法：调大配置
+====
+
+____
+mysql 字符集 utf8mb4_general_ci 查询时不分大小写
+____
+
+====
+- sql: binary name='xxx'
+- 设置字符集为 utf8mb4_general_cs 或者 utfmb4_bin
+====
+
+____
+gradle 仓库配置
+____
+
+====
+* 查找包
+
+gradle 会根据项目中 build.gradle 文件中的 repositories 节点的配置去查找包
+
+常用配置：
+[source,json]
+----
+repositories {
+    mavenLocal() //查本地 maven 仓库
+    maven { url "http://maven.aliyun.com/nexus/content/groups/public/" } //查阿里云 maven 仓库
+    google() //查 google
+    jcenter() //查 jcenter
+}
+----
+
+* 下载包
+
+下载包会存放在 gradle 本地，可以使用环境变量 GRADLE_USER_HOME 配置存储位置，或者在 idea 的 gradle 配置中配置
+
+====
+
+____
+gradle.properties 使用
+____
+
+====
+
+====
+
+____
+android 多模块项目
+____
+
+====
+app 模块 build.gradle 不单需要引入自身的 libs，也需要引入子模块的 libs
+[source,json]
+----
+repositories {
+    flatDir {
+        dirs 'libs',"../uniplugin_ali_real_person/libs"
+    }
+}
+----
+
+解决依赖存在多个版本，需要在 root 项目中 build.gradle 的 buildscript 节点添加配置
+[source,json]
+----
+subprojects {
+    // 解决多版本冲突
+    configurations.all {
+        resolutionStrategy {
+            resolutionStrategy.eachDependency { details ->
+                if (details.requested.group == 'androidx.core') {
+                    details.useVersion "1.0.1"
+                }
+                if (details.requested.group == 'androidx.lifecycle') {
+                    details.useVersion "2.0.0"
+                }
+                if (details.requested.group == 'androidx.versionedparcelable') {
+                    details.useVersion "1.0.0"
+                }
+                if (details.requested.group == 'androidx.fragment') {
+                    details.useVersion "1.0.0"
+                }
+                if (details.requested.group == 'androidx.appcompat') {
+                    details.useVersion "1.0.1"
+                }
+            }
+        }
+    }
+
+}
+----
+====
+
+____
+android app, android library, java library
+____
+
+====
+android app::
+包含安卓代码，安卓资源，可打包成 apk
+
+android library::
+包含安卓代码，安卓资源，可打包成 aar，被其他项目依赖使用 （注意：aar 打包后会造成内部 gradle 依赖和内部的 aar 丢失，需要引用方再次手动）
+
+java library::
+只包含 java 代码，可打包成 jar，被其他项目依赖使用
+====
+
