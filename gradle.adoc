@@ -1,0 +1,98 @@
+:toc:
+:source-highlighter: highlightjs
+:toclevels: 5
+
+= gradle
+
+=== 安装
+____
+配置环境变量
+____
+====
+[source,shell]
+----
+Set-Env machine GRADLE_HOME e:\xxx\gradle
+Set-Env machine Path 
+# 用来存储下载下来的依赖和 gradle-wrapper
+Set-Env machine GRADLE_USER_HOME e:\gradle-repo
+----
+====
+=== gradle-wrapper.properties
+保证项目开发者 gradle 版本一致
+====
+[source,properties]
+----
+distributionUrl=https\://services.gradle.org/distributions/gradle-6.5-all.zip #gradle 下载路径，可以是本地文件系统路径 file:///
+distributionBase=GRADLE_USER_HOME #读取系统环境变量 GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStorePath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+----
+====
+=== repositories
+____
+仓库配置
+____
+====
+[source,groovy]
+----
+repositories {
+    mavenLocal()  //查本地
+    maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'} //查 aliyun
+    mavenCentral() //maven 中心仓库
+}
+----
+====
+
+=== plugin
+
+==== plugin use
+____
+使用 plugin 的两种方式
+
+There are some key differences between the plugins {} block mechanism and the “traditional” apply() method mechanism. There are also some constraints, some of which are temporary limitations while the mechanism is still being developed and some are inherent to the new approach.
+
+plugins{}块机制和传统的apply()方法机制之间有一些关键的区别。也有一些限制，其中一些是仍在发展时的临时限制，一些是新办法的固有限制
+____
+
+====
+* plugins block 新的方式
+** 必须放在首行
+** 只能使用在 build.gradle 和 setting.gradle 中，不能在 script plugins or init scripts. （未来的版本中将会删除此限制）
+** 不能在 block 中使用
+
+[source,groovy]
+----
+plugins{
+    id '插件a名' version '插件a版本' apply 是否立即使用
+    id '插件b名' version '插件b版本' apply 是否立即使用
+}
+----
+
+* apply plugin 旧的方式
+** 必须放在首行，例外：在 root project 中可以在 subprojects 中使用
+
+.root.gradle
+[source,groovy]
+----
+plugins {
+    id 'com.example.hello' version '1.0.0' apply false
+    id 'com.example.goodbye' version '1.0.0' apply false
+}
+
+subprojects {
+    if (name.startsWith('hello')) {
+        apply plugin: 'com.example.hello'
+    }
+}
+----
+====
+
+=== properties
+gradle.properties 文件定义项目所有的属性配置
+____
+gradle 脚本中使用 gradle.properties
+____
+====
+
+====
