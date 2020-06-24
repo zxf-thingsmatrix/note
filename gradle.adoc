@@ -44,6 +44,13 @@ repositories {
 ----
 ====
 
+=== init script
+
+==== init script 特点
+
+==== init script 使用
+
+
 === plugin
 
 ==== plugin use
@@ -86,6 +93,52 @@ subprojects {
     }
 }
 ----
+====
+
+____
+plugin management
+
+只能被用在 settings.gradle 和 init script
+____
+====
+.settings.gradle
+[source,groovy]
+----
+pluginManagement {
+    plugins {
+       
+    }
+    resolutionStrategy {
+    
+    }
+    repositories {
+        maven {
+            url '../maven-repo'
+        }
+        gradlePluginPortal()
+        ivy {
+            url '../ivy-repo'
+        }
+    }
+}
+----
+
+.init.gradle
+[source,groovy]
+----
+settingsEvaluated { settings ->
+    settings.pluginManagement {
+        plugins {
+        }
+        resolutionStrategy {
+        }
+        repositories {
+        }
+    }
+}
+----
+
+
 ====
 
 === properties
