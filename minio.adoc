@@ -32,6 +32,25 @@ docker run -d --name minio --network app_net -p 9000:9000 --restart=always -v /m
 
 ----
 
+==== 配置
+
+.配置目录 root/.minio
+[source,shell]
+----
+├── certs
+│   ├── CAs
+│   ├── private.key
+│   └── public.crt
+└── config.json
+----
+
+更多配置详见 https://docs.min.io/cn/minio-server-configuration-guide.html
+
+==== 事件通知
+
+
+更多详见 https://docs.min.io/cn/minio-bucket-notification-guide.html
+
 === mc (minio client)
 
 ==== 安装
@@ -60,5 +79,5 @@ mc tree -f docker
 
 更多命令详见：https://docs.min.io/cn/minio-client-complete-guide.html
 
-==== TODO
+=== TODO
 - [ ] 分片貌似不支持扩展和压缩，初始化是定死
