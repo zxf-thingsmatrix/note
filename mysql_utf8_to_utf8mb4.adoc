@@ -1,0 +1,104 @@
+:toc:
+:source-highlighter: highlightjs
+
+
+=== 备份数据库
+
+.数据库全量逻辑备份
+[source,shell]
+----
+docker exec mysql mysqldump -uroot -pthingsmatrix@8 --databases 数据库名1 数据库名2 > backup.sql
+----
+
+----
+--add-drop-database：每个数据库创建之前添加drop数据库语句。默认为打开状态，使用--skip-add-drop-table取消。
+--comments：附加注释信息。默认为打开，可以用--skip-comments取消。
+--lock-tables：在导出数据前先锁表，导出完成后释放。注意如果导出多个数据库，则在前一个表导出完成后，后一个表才上锁。
+--lock-all-tables：它会在一开始就对所有的数据库的所有表上锁，请注意它会使用FLUSH TABLES。
+--single-transaction：它设置整个导出的过程为一个事务，避免了锁。
+--master-data：它对所有数据库的所有表上了锁，并且查询binlog的位置。请注意它会使用FLUSH TABLES。
+--master-data --single-transaction：这种组合,会先对所有数据库的所有表上锁，读取binlog的信息之后就立即释放锁,这个过程是十分短暂的，然后整个导出过程都在一个事务里。请注意它会使用FLUSH TABLES。
+-F or -flush-logs：使用这个选项，在执行导出之前将会刷新MySQL服务器的log。
+-f or -force：使用这个选项，即使有错误发生，仍然继续导出。
+-t or -no-create-info：这个选项使的mysqldump命令不创建CREATE TABLE语句，这个选项在只需要数据而不需要DDL（数据库定义语句）时很方便。
+-d or -no-data ：这个选项使的mysqldump命令不创建INSERT语句，即不导出数据
+----
+
+.数据库全量恢复
+[source,shell]
+----
+docker exec mysql mysqldump -uroot -pthingsmatrix@8 < backup.sql
+----
+
+=== 修改 database, table, column 字符集
+
+.切换到 information_schema
+[source,sql]
+----
+use information_schema;
+----
+
+.生成批量修改 database 字符集 sql
+[source,sql]
+----
+SELECT concat("ALTER DATABASE `",table_schema,"` CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;") as _sql 
+FROM `TABLES` where table_schema like "数据库名" group by table_schema;
+----
+
+.生成批量修改 table 字符集 sql
+[source,sql]
+----
+SELECT concat("ALTER TABLE `",table_schema,"`.`",table_name,"` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;") as _sql  
+FROM `TABLES` where table_schema like "数据库名" group by table_schema, table_name;
+----
+
+.生成批量修改 column 字符集 sql
+[source,sql]
+----
+-- varchar 字段
+SELECT concat("ALTER TABLE `",table_schema,"`.`",table_name, "` CHANGE `",column_name,"` `",column_name,"` ",data_type,"(",character_maximum_length,") CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;") as _sql 
+FROM `COLUMNS` where table_schema like "数据库名" and data_type in ('varchar');
+
+-- text tinytext mediumtext longtext 字段
+SELECT concat("ALTER TABLE `",table_schema,"`.`",table_name, "` CHANGE `",column_name,"` `",column_name,"` ",data_type," CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;") as _sql 
+FROM `COLUMNS` where table_schema like "数据库名" and data_type in ('text','tinytext','mediumtext','longtext');
+----
+
+=== 修改默认字符集
+
+./etc/my.cnf
+[source]
+----
+[client]
+default-character-set=utf8mb4
+
+# 对其他远程连接的mysql客户端的配置
+[mysql]
+default-character-set=utf8mb4
+
+# 本地mysql服务的配置
+[mysqld]
+character-set-client-handshake=FALSE
+character-set-server=utf8mb4
+collation-server=utf8mb4_unicode_ci
+init_connect='SET NAMES utf8mb4'
+----
+
+.重启 mysql 服务
+[source,shell]
+----
+docker exec mysql service mysqld restart
+----
+
+.查看是否生效
+[source,sql]
+----
+show variables like 'character_set%';
+show variables like 'collation%';
+----
+
+.修复，优化表
+[source,shell]
+----
+mysqlcheck -uroot -pthingsmatrix@8 --auto-repair --optimize --all-databases
+----
