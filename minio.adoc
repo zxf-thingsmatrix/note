@@ -1,4 +1,64 @@
 :toc:
 :source-highlighter: highlightjs
 
-=== Minio
+== Minio
+
+=== server
+
+==== 安装
+
+.用户名密码配置
+----
+环境变量：MINIO_ACCESS_KEY （默认是 minioadmin），MINIO_SECRET_KEY（默认是 minioadmin）
+----
+
+
+.单分片部署
+[source,shell]
+----
+docker run -d --name minio --network app_net -p 9000:9000 --restart=always -v /minio/config:/root/.minio -v /minio/data1:/minio/data1 minio/minio server /minio/data1
+----
+
+.多分片部署
+[source,shell]
+----
+# 分片总数=4，数据分片=4/2，校验分片=4/2，当任意 <=2 个分片数据丢失时，能保证旧数据正常读,新数据需要分片>=3 时才能正常写，重启后 4 个分区恢复原样
+docker run -d --name minio --network app_net -p 9000:9000 --restart=always -v /minio/config:/root/.minio -v /minio/data1:/minio/data1 -v /minio/data2:/minio/data2 -v /minio/data3:/minio/data3 -v /minio/data4:/minio/data4 minio/minio server /minio/data1 /minio/data2 /minio/data3 /minio/data4
+----
+
+.分布式部署
+[source,shell]
+----
+
+----
+
+=== mc (minio client)
+
+==== 安装
+
+[source,shell]
+----
+docker pull minio/mc
+docker run -it --name=mc --network app_net --entrypoint=/bin/sh minio/mc
+----
+
+==== 使用 mc 访问 server
+
+.添加一个 server
+[source,shell]
+----
+mc config host add docker http://minio:9000 minioadmin minioadmin --api S3V4
+----
+
+.查看 bucket
+[source,shell]
+----
+mc ls docker/bucket名称
+# 打印 bucket 树，-f 表示文件也打印出来，否则只会打印目录
+mc tree -f docker
+----
+
+更多命令详见：https://docs.min.io/cn/minio-client-complete-guide.html
+
+==== TODO
+- [ ] 分片貌似不支持扩展和压缩，初始化是定死
