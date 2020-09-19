@@ -1,0 +1,138 @@
+:toc:
+:source-highlighter: highlightjs
+:sectnumlevels: 5
+
+= Spock
+
+groovy,java 应用的测试框架
+
+在线实践地址：http://meetspock.appspot.com/
+
+.优点
+1. Groovy Dsl, Groovy Java 混编
+
+2. Data Driven Testing, Behavior Driven Testing
+
+3. 囊括 Junit, Mockito, JBehave 三个框架的功能
+
+== 项目构建
+
+.build.gradle
+[source,groovy]
+----
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
+group 'lost.canvas'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    maven { url 'https://maven.aliyun.com/repository/public/' }
+    mavenCentral()
+}
+
+ext {
+    spockVer = '2.0-M3-groovy-3.0'
+}
+
+dependencies {
+    testImplementation "org.spockframework:spock-core:$spockVer"
+}
+
+test {
+    useJUnitPlatform()
+}
+----
+
+== 测试类
+
+继承 extends spock.lang.Specification
+
+== 生命周期函数
+
+=== setupSpec()
+
+类比 junit @BeforeClass
+
+=== cleanupSpec()
+
+类比 junit @AfterClass
+
+=== setup()
+
+类比 junit @Before
+
+=== cleanup()
+
+类比 junit @After
+
+
+== 测试函数
+
+一个测试函数由下列块组成
+
+=== 块
+==== given:
+
+初始化工作
+
+==== when:
+
+执行
+
+==== expect:
+
+断言
+
+==== then:
+
+断言
+
+==== where:
+
+提供测试数据
+
+==== cleanUp:
+
+收尾工作
+
+== Mock & Stub
+
+=== Mock
+
+模拟 Command, Behavioral testing
+
+=== Stub
+
+模拟 Query, State testing
+
+=== 差异
+
+Dummy:: just bogus values to satisfy the API.
+
+====
+Example: If you're testing a method of a class which requires many mandatory parameters in a constructor which have no effect on your test, then you may create dummy objects for the purpose of creating new 
+instances of a class.
+====
+
+Fake:: create a test implementation of a class which may have a dependency on some external infrastructure. (It's good practice that your unit test does NOT actually interact with external infrastructure.)
+
+====
+Example: Create fake implementation for accessing a database, replace it with in-memory collection.
+====
+
+Stub:: override methods to return hard-coded values, also referred to as state-based.
+
+====
+Example: Your test class depends on a method Calculate() taking 5 minutes to complete. Rather than wait for 5 minutes you can replace its real implementation with stub that returns hard-coded values; taking only a 
+small fraction of the time.
+====
+
+Mock:: very similar to Stub but interaction-based rather than state-based. This means you don't expect from Mock to return some value, but to assume that specific order of method calls are made.
+
+====
+Example: You're testing a user registration class. After calling Save, it should call SendConfirmationEmail.
+====
