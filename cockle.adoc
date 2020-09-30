@@ -1,0 +1,40 @@
+:toc:
+:source-highlighter: highlightjs
+
+tcp option
+
+1. tos(type of service): ip option, qos(quality of service) 在 ip 层的实现，对比二层 cos, 以及替代实现 dscp, 旨在对 ip 包进行优先级标记，接收方根据标记对 ip 包进行分类进入不同队列，由调度器进行调度，用于缓解网络阻塞的状况
+
+2. tcp_defer_accept: server 配置后，接收到 client last ack 后不会将 fd 放进 accept queue, 直到 client 发送第一个数据包才会 accept
+
+多个线程调用 java selector.register() 会阻塞线程
+解决方法：
+
+1. one-nio 将 fd 添加到和 selector 绑定的 ConcurrentLinkedQueue 中，然后 wakeup selector 再单线程批量 register; epoll 下无处理
+
+2. netty 将 fd 注册包裹成一个 microtask 加入到 taskqueue 中
+
+3. vproxy 无处理
+
+epoll_wait 中的事件参数处理
+
+1. one-nio,netty 申请 event_struct * max_event 的堆外内存，然后将地址传递给 jni epoll_wait, jni epoll_wait 返回 event 数量，Java 中直接操作堆外内存获取 event
+
+2. vproxy jni 中直接将 event 解析成 java object 返回给 java 调用方，即将 event 由堆外内存转为堆内存
+
+
+epoll ET 模式下读取数据处理：
+1. netty 获取 read event 后根据 EpollRecvByteAllocatorHandle  读取一段数据后执行 epollInFinally 检测 socket 是否存在未读数据，如果有，则增加一个读取的 microTask，保证在 ET 模式下读完所有数据
+
+2. vproxy 使用 redis ae.c，不支持 EPOLLET
+
+3. one-nio 不支持 EPOLLET
+
+event 处理：
+1. netty 对于 EPOLLIN,EPOLLOUT,EPOLLET,EPOLLERR,EPOLLHUP,EPOLLRDHUP 都有处理
+
+2. vproxy 使用 redis ae.c 只有 EPOLLIN,EPOLLOUT,EPOLLERR,EPOLL_HUP，不过 vproxy 修改了 ae.c 代码，在内部对EPOLL_ET做了处理，但是 java 层的定义依旧是 AE_READABLE,AE_WRITABLE
+
+3. one-nio 只有 EPOLLIN,EPOLLOUT,EPOLLHUP|EPOLLERR 处理
+
+4. jdk nio 只有 EPOLLIN,EPOLLOUT处理
