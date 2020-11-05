@@ -1,0 +1,14 @@
+:toc:
+:source-highlighter: highlightjs
+
+== 调用系统调用的几种方式
+
+1. int 软中断
+
+2. glibc 通用系统调用 wrapper syscall(), 获取系统调用号方式 `cat /usr/include/asm-generic/unistd.h | grep 系统调用`
+
+3. glibc 具体系统调用 wrapper
+
+详见 http://arthurchiao.art/blog/system-call-definitive-guide-zh/
+
+== 

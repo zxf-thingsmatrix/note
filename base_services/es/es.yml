@@ -1,0 +1,30 @@
+discovery.type: 'single-node'
+http.port: 9200
+transport.tcp.port: 9300
+cluster.name: 'elasticsearch'
+network.host: '0.0.0.0'
+
+http.cors.enabled: true
+http.cors.allow-origin: '*'
+http.cors.allow-headers: 'Authorization'
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+
+#searchguard.ssl.transport.pemcert_filepath: <path_to_node_certificate>
+#searchguard.ssl.transport.pemkey_filepath: <path_to_node_certificate_key>
+#searchguard.ssl.transport.pemkey_password: <key_password (optional)>
+#searchguard.ssl.transport.pemtrustedcas_filepath: <path_to_root_ca>
+#searchguard.ssl.transport.enforce_hostname_verification: false
+#searchguard.authcz.admin_dn:
+#  - CN=sgadmin
+#
+#searchguard.ssl.http.enabled: true
+#searchguard.ssl.http.pemcert_filepath: <path_to_http_certificate>
+#searchguard.ssl.http.pemkey_filepath: <path_to_http_certificate_key>
+#searchguard.ssl.http.pemkey_password: <key_password (optional)>
+#searchguard.ssl.http.pemtrustedcas_filepath: <path_to_http_root_ca>
+#
+#searchguard.restapi.roles_enabled: ["SGS_ALL_ACCESS"]
+
+
+

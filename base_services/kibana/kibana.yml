@@ -1,0 +1,18 @@
+server:
+  name: 'kibana'
+  port: 5601
+  host: '0.0.0.0'
+elasticsearch:
+  hosts: [ 'http://es:9200' ]
+  username: 'kibana'
+  password: 'thingsmatrix@8'
+
+kibana.index: '.kibana'
+
+i18n.locale: 'zh-CN'
+
+monitoring:
+  ui:
+    container:
+      elasticsearch:
+        enabled: true
