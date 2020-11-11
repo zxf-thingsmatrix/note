@@ -1,65 +1,65 @@
 version: '3.8'
 services:
-    mysql:
-        container_name: 'mysql'
-        image: 'mysql:${mysql_tag}'
-        networks:
-            - 'custom_net'
-        ports:
-            - '3306:3306'
-        volumes:
-        - './mysql/my.cnf:/etc/my.cnf'
-        - './mysql/init/:/docker-entrypoint-initdb.d/'
-        - '${data_dir}/mysql/:/var/lib/mysql/'
-        environment:
-            - 'MYSQL_ROOT_PASSWORD=thingsmatrix@8'
-            - 'MYSQL_ROOT_HOST=%'
-        restart: 'always'
+    # mysql:
+    #     container_name: 'mysql'
+    #     image: 'mysql:${mysql_tag}'
+    #     networks:
+    #         - 'custom_net'
+    #     ports:
+    #         - '3306:3306'
+    #     volumes:
+    #     - './mysql/my.cnf:/etc/my.cnf'
+    #     - './mysql/init/:/docker-entrypoint-initdb.d/'
+    #     - '${data_dir}/mysql/:/var/lib/mysql/'
+    #     environment:
+    #         - 'MYSQL_ROOT_PASSWORD=thingsmatrix@8'
+    #         - 'MYSQL_ROOT_HOST=%'
+    #     restart: 'always'
 
-    redis:
-        container_name: 'redis'
-        image: 'redis:${redis_tag}'
-        networks:
-            - 'custom_net'
-        ports:
-            - '6379:6379'
-        volumes:
-            - './redis/redis.conf:/etc/redis/redis.conf'
-            - '${data_dir}/redis/:/data/'
-        command: 'redis-server /etc/redis/redis.conf --requirepass thingsmatrix@8'
-        restart: 'always'
+    # redis:
+    #     container_name: 'redis'
+    #     image: 'redis:${redis_tag}'
+    #     networks:
+    #         - 'custom_net'
+    #     ports:
+    #         - '6379:6379'
+    #     volumes:
+    #         - './redis/redis.conf:/etc/redis/redis.conf'
+    #         - '${data_dir}/redis/:/data/'
+    #     command: 'redis-server /etc/redis/redis.conf --requirepass thingsmatrix@8'
+    #     restart: 'always'
         
-    es:
-        container_name: 'es'
-        image: 'elasticsearch:${es_tag}'
-        networks:
-            - 'custom_net'
-        ports:
-            - '9200:9200'
-            - '9300:9300'
-        volumes:
-            - './es/es.yml:/usr/share/elasticsearch/config/elasticsearch.yml'
-            - '${data_dir}/es/:/usr/share/elasticsearch/data/'
-        ulimits:
-            memlock:
-                soft: -1
-                hard: -1
-        environment:
-            - 'ES_JAVA_OPTS=-Xms2g -Xmx2g'
-        restart: 'always'
+    # es:
+    #     container_name: 'es'
+    #     image: 'elasticsearch:${es_tag}'
+    #     networks:
+    #         - 'custom_net'
+    #     ports:
+    #         - '9200:9200'
+    #         - '9300:9300'
+    #     volumes:
+    #         - './es/es.yml:/usr/share/elasticsearch/config/elasticsearch.yml'
+    #         - '${data_dir}/es/:/usr/share/elasticsearch/data/'
+    #     ulimits:
+    #         memlock:
+    #             soft: -1
+    #             hard: -1
+    #     environment:
+    #         - 'ES_JAVA_OPTS=-Xms2g -Xmx2g'
+    #     restart: 'always'
     
-    kibana:
-        container_name: 'kibana'
-        image: 'kibana:${es_tag}'
-        networks:
-            - 'custom_net'
-        ports:
-            - '5601:5601'
-        volumes:
-            - './kibana/kibana.yml:/usr/share/kibana/config/kibana.yml'
-        restart: 'always'
-        depends_on:
-            - 'es'
+    # kibana:
+    #     container_name: 'kibana'
+    #     image: 'kibana:${es_tag}'
+    #     networks:
+    #         - 'custom_net'
+    #     ports:
+    #         - '5601:5601'
+    #     volumes:
+    #         - './kibana/kibana.yml:/usr/share/kibana/config/kibana.yml'
+    #     restart: 'always'
+    #     depends_on:
+    #         - 'es'
     
     mongo:
         container_name: 'mongo'
@@ -69,8 +69,11 @@ services:
         ports:
             - '27017:27017'
         volumes:
-            - '${data_dir}/mongo/db/:/data/db/'
-            - '${data_dir}/mongo/configdb/:/data/configdb'
+            - './mongo/mongod.conf:/etc/mongo/mongod.conf'
+            - './mongo/init/:/docker-entrypoint-initdb.d/'
+            - '${data_dir}/mongo/db/:/var/lib/mongo/'
+            - '${log_dir}/mongo/:/var/log/mongo/'
+        command: 'mongod -f /etc/mongo/mongod.conf'
         restart: 'always'
 
 networks:
