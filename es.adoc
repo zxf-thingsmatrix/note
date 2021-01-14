@@ -103,4 +103,74 @@ Changed password for user [elastic]
 GET _security/user
 
 
-=== 使用 searchguard 插件
+==== 使用 searchguard 插件
+
+
+=== 使用时的优化
+
+==== Index
+
+1. 关闭索引
+
+2. 只读索引
+
+3. 滚动索引
+
+4. 分片数需要建索引前确定好，后续无法修改，新索引可以通过修改索引模板，新索引才能生效，旧索引只能迁移数据到新索引，即重建索引
+
+5. 副本数可以动态修改，如果服务器资源有限，可以先选择设置副本数=0
+
+==== Mapping
+
+1. 某些字段不做索引
+
+2. 正确设置 string 字段类型：不做分词索引的一律使用 keyword
+
+==== Document
+
+1. 新增文档，id 如果可以的话使用 es 自动生成的 id, 可以提高写入性能（如果使用自定义的id,写入时会检验是否冲突）
+
+==== 参数
+
+1. 锁内存 bootstrap.mlockall: true
+
+=== API
+
+.查看资源使用情况
+[source]
+----
+http://node.thingsmatrix.co:31920/_cat/nodes?v&h=http,version,jdk,disk.total,disk.used,disk.avail,disk.used_percent,heap.current,heap.percent,heap.max,ram.current,ram.percent,ram.max,master
+----
+
+query_string vs multi_match
+
+
+
+=== 安装使用 elasticsearch-head
+
+
+1. git clone https://github.com/mobz/elasticsearch-head.git
+
+2. scoop install npm -g
+
+3. npm install yarn -g
+
+4. cd elasticsearch-head && yarn install
+
+5. yarn run start
+
+6. 浏览器打开 localhost:9100，或者 localhost:9100/?auth_user=elastic&auth_password=xxx
+
+
+=== 脚本
+
+批量写入大量数据::
+
+1. 将 index 设置为只读
+2. 索引 setting 关闭定时 refresh 或者 bulk?refresh=false, 全部写完再手动refresh POST <index>/_refresh
+3. `curl -XPUT 'http://elastic:xxx@node.thingsmatrix.co:31920/_bulk' -H "Content-Type: application/json" --data-binary @order_test_data.json`
+
+
+
+
+
