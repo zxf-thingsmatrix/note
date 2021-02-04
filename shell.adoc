@@ -8,8 +8,8 @@
 ----
 #!/usr/bin/expect
 
-#设定超时时间为3秒
-set timeout 3
+#设定超时时间为30秒
+set timeout 30
 #fork一个子进程执行ssh命令
 spawn ssh -p2688 your_username@jump-server
 expect "*password" {
@@ -23,6 +23,10 @@ if { [llength $argv] >=1 } {
         puts $ip
         send "$ip\r"
 }
+}
+expect "*$*"{
+    puts "enter host ok"
+    send "sudo -i\r"
 }
 interact
 ----
