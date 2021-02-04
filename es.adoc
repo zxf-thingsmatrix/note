@@ -170,7 +170,10 @@ query_string vs multi_match
 2. 索引 setting 关闭定时 refresh 或者 bulk?refresh=false, 全部写完再手动refresh POST <index>/_refresh
 3. `curl -XPUT 'http://elastic:xxx@node.thingsmatrix.co:31920/_bulk' -H "Content-Type: application/json" --data-binary @order_test_data.json`
 
+=== 分页
+
+1. 在7.0版发布之前，hits.total始终用于表示符合查询条件的文档的实际数量。在Elasticsearch 7.0版中，如果匹配数大于10,000，则不会计算hits.total。 这是为了避免为给定查询计算精确匹配文档的不必要开销。 我们可以通过将 `track_total_hits = true` 作为请求参数来强制进行精确匹配的计算。
 
 
-
+2. 索引默认只支持offset+size<=10000，超过则会报错，可以修改 settings `max_result_window=1000000` 增大限制
 

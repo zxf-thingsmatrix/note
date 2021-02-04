@@ -1,0 +1,43 @@
+canal 挂了：
+canal 重启后从 last binlog position 开始从 mysql 同步 binlog, canal client 正常消费保证数据不丢
+
+canal client 消费失败：
+可重试失败
+不可重试失败
+加个表记录 canal 消费失败的事件 table_name, event_type, id，然后使用定时任务定时根据id查询最新数据or删除数据同步到 es
+
+canal client 消费顺序：
+
+canal client 消费幂等：
+
+
+每次 es 同步都需要调用 geo regeo:
+将 geo rego 信息以 json 的形式存入 db
+
+阿里云无效文件删除问题：
+
+
+com.thingsmatrix.czw.user.service.impl.RpServiceImpl#verifyResultAndAddAutomaticAudit 没加事务
+
+实人认证：
+前端 userId -> 后台从阿里云通过 bizId 获取 token ，redis rp:{bizId}=userId，返回 token，bizId 给前端
+前端实人认证结束后调用后台接口获取认证结果
+前端 bizId -> 后台 bizId 从 redis 获取 userId, 从阿里云获取认证结果，添加自动审核 user_audit, 更新 user 状态
+
+手工认证：
+前端 手工认证信息 -> 后台保存 user_aduit, 状态 audit_pending, 用户状态 audit_pending
+前端 审核 auditId,auditCode -> 更新 user_audit 状态，user 状态
+
+高德地图：
+geo 根据地址解析 location,formattedAddress等
+regeo 根据 location 解析商圈信息
+
+canal 同步注意问题
+
+
+修改图片时调用文件删除接口，标记文件无效，然后定时任务定时删除
+
+house 增加 lat lon geo regeo 字段
+address 记录短地址
+full_address
+formatted_address 记录解析地址
