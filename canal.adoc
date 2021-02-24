@@ -1,0 +1,49 @@
+:toc:
+:source-highlighter: highlightjs
+
+## canal.properties
+canal_local.properties 覆盖 canal.properties
+
+canal_admin 中修改 server 的 canal.properties 不会生效
+
+====
+
+create instance t1
+
+delete instance t1
+
+create instance t2
+
+binlog1
+
+mq receive binlog1
+
+delete instance t2
+
+create instance t1
+
+mq receive binlog1
+
+====
+
+
+====
+
+create instance t1 slaveId=1111
+
+delete instance t1
+
+create instance t2
+
+binlog2
+
+mq receive binlog2
+
+delete instance t2
+
+create instance t1 slaveId=2222
+
+mq receive binlog2
+
+====
+
