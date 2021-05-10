@@ -177,3 +177,12 @@ query_string vs multi_match
 
 2. 索引默认只支持offset+size<=10000，超过则会报错，可以修改 settings `max_result_window=1000000` 增大限制
 
+
+=== 排错
+
+错误：FORBIDDEN/12/index read-only / allow delete (api)
+ 
+原因： 当系统内存或存储超过水位线时，会将索引的 settings index.blocks.read_only_allow_delete = false, 可以通过 GET _all/_settings 或 GET 索引名/_settings 查看
+
+解决： 增大或回收系统资源，PUT 索引名/_settings -d {"index.blocks.read_only_allow_delete": null or false}
+
