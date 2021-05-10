@@ -1,7 +1,7 @@
 :toc:
 :source-highlighter: highlightjs
 
-## canal.properties
+== canal.properties
 canal_local.properties 覆盖 canal.properties
 
 canal_admin 中修改 server 的 canal.properties 不会生效
@@ -47,3 +47,9 @@ mq receive binlog2
 
 ====
 
+
+== binlog
+
+https://blog.csdn.net/lkforce/article/details/108539088
+
+https://blog.51cto.com/lookingdream/1921162
